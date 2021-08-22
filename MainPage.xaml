@@ -1,0 +1,57 @@
+﻿<Page
+    x:Class="Video_Player.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
+    AllowDrop="True"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    DragOver="Drag_over"
+    Drop="Page_Drop"
+    SizeChanged="MainPage_SizeChanged"
+    mc:Ignorable="d">
+    <RelativePanel>
+        <muxc:TabView
+            x:Name="Tabs"
+            Margin="0,-8,0,0"
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            AllowDrop="True"
+            CloseButtonOverlayMode="OnPointerOver"
+            DragOver="Drag_over"
+            Drop="Page_Drop"
+            IsAddTabButtonVisible="false"
+            RelativePanel.AlignLeftWithPanel="True"
+            RelativePanel.AlignRightWithPanel="True"
+            RelativePanel.AlignTopWithPanel="True"
+            TabCloseRequested="Tab_CloseRequested">
+
+            <muxc:TabView.TabStripHeader>
+                <Grid x:Name="ShellTitlebarInset" Background="Transparent" />
+            </muxc:TabView.TabStripHeader>
+            <muxc:TabView.TabStripFooter>
+                <Grid x:Name="CustomDragRegion" Background="Transparent" />
+            </muxc:TabView.TabStripFooter>
+        </muxc:TabView>
+
+        <Rectangle
+            AllowDrop="True"
+            DragOver="Drag_over"
+            Drop="Page_Drop"
+            Fill="Transparent"
+            RelativePanel.AlignBottomWithPanel="True"
+            RelativePanel.AlignLeftWithPanel="True"
+            RelativePanel.AlignRightWithPanel="True"
+            RelativePanel.Below="Tabs" />
+
+        <Button
+            x:Name="OpenButton"
+            Padding="40"
+            Click="OpenButton_Click"
+            Content="Open"
+            RelativePanel.AlignHorizontalCenterWithPanel="True"
+            RelativePanel.AlignVerticalCenterWithPanel="True" />
+
+    </RelativePanel>
+</Page>
