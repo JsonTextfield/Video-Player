@@ -31,10 +31,7 @@
             RelativePanel.Above="slider"
             RenderTransformOrigin="0.5,0.5">
             <MediaPlayerElement.RenderTransform>
-                <TransformGroup>
-                    <ScaleTransform x:Name="scale" ScaleX="1" />
-                    <RotateTransform x:Name="rotate" CenterX="0.5" CenterY="0.5" />
-                </TransformGroup>
+                <ScaleTransform x:Name="scale" ScaleX="1" />
             </MediaPlayerElement.RenderTransform>
         </MediaPlayerElement>
         <StackPanel
@@ -91,8 +88,9 @@
             <TextBlock
                 x:Name="videoSpeedLabel"
                 MinWidth="60"
-                Padding="5"
-                Text="1.00" />
+                VerticalAlignment="Center"
+                Text="1.00"
+                TextAlignment="Center" />
         </StackPanel>
 
         <Slider
@@ -112,6 +110,7 @@
         <TextBlock
             x:Name="timestamp"
             Padding="5"
+            VerticalAlignment="Center"
             RelativePanel.AlignBottomWithPanel="True"
             RelativePanel.AlignRightWithPanel="True"
             Text="0:00/0:00"

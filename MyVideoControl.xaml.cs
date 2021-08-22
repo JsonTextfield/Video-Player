@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using Windows.Media.Core;
+using Windows.Media.MediaProperties;
 using Windows.Media.Playback;
 using Windows.Storage;
 using Windows.System.Threading;
@@ -17,7 +19,15 @@ namespace Video_Player
         private TimeSpan a = TimeSpan.FromMilliseconds(0);
         private TimeSpan b = TimeSpan.FromMilliseconds(0);
         private ThreadPoolTimer PeriodicTimer;
-        private bool pingpong = false;
+        private int rotationValue = 0;
+        private readonly List<MediaRotation> orientations = new List<MediaRotation>()
+        {
+            MediaRotation.None,
+            MediaRotation.Clockwise90Degrees,
+            MediaRotation.Clockwise180Degrees,
+            MediaRotation.Clockwise270Degrees
+        };
+        //private bool pingpong = false;
         public MyVideoControl(StorageFile file)
         {
             InitializeComponent();
@@ -100,12 +110,12 @@ namespace Video_Player
             int totalMinutes = totalSeconds / 60;
             seconds %= 60;
             totalSeconds %= 60;
-            timestamp.Text = String.Format("{0}:{1:D2}/{2}:{3:D2}", minutes, seconds, totalMinutes, totalSeconds);
+            timestamp.Text = string.Format("{0}:{1:D2}/{2}:{3:D2}", minutes, seconds, totalMinutes, totalSeconds);
         }
 
         private void UpdatePlaybackSpeed()
         {
-            videoSpeedLabel.Text = String.Format("{0:F2}", mediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate);
+            videoSpeedLabel.Text = string.Format("{0:F2}", mediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate);
         }
 
         private bool IsPositionBetweenAandB(TimeSpan position, TimeSpan fullVideoLength)
@@ -225,10 +235,15 @@ namespace Video_Player
             {
                 scale.ScaleX *= -1;
             }
-            else if (sender == rotateR || sender == rotateL)
+            else if (sender == rotateR)
             {
-                rotate.Angle += sender == rotateR ? 90 : -90;
-                UpdateLayout();
+                rotationValue = (rotationValue + 1) % 4;
+                mediaPlayer.MediaPlayer.PlaybackSession.PlaybackRotation = orientations[rotationValue];
+            }
+            else if (sender == rotateL)
+            {
+                rotationValue = rotationValue > 0 ? rotationValue - 1 : 3;
+                mediaPlayer.MediaPlayer.PlaybackSession.PlaybackRotation = orientations[rotationValue];
             }
         }
 

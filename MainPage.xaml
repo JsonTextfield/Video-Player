@@ -16,7 +16,6 @@
             x:Name="Tabs"
             Margin="0,-8,0,0"
             HorizontalAlignment="Stretch"
-            VerticalAlignment="Stretch"
             AllowDrop="True"
             CloseButtonOverlayMode="OnPointerOver"
             DragOver="Drag_over"
@@ -26,7 +25,6 @@
             RelativePanel.AlignRightWithPanel="True"
             RelativePanel.AlignTopWithPanel="True"
             TabCloseRequested="Tab_CloseRequested">
-
             <muxc:TabView.TabStripHeader>
                 <Grid x:Name="ShellTitlebarInset" Background="Transparent" />
             </muxc:TabView.TabStripHeader>
@@ -47,7 +45,7 @@
 
         <Button
             x:Name="OpenButton"
-            Padding="40"
+            Padding="100"
             Click="OpenButton_Click"
             Content="Open"
             RelativePanel.AlignHorizontalCenterWithPanel="True"
