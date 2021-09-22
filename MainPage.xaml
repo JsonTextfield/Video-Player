@@ -45,7 +45,7 @@
 
         <Button
             x:Name="OpenButton"
-            Padding="100"
+            Padding="40"
             Click="OpenButton_Click"
             Content="Open"
             RelativePanel.AlignHorizontalCenterWithPanel="True"

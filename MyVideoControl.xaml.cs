@@ -1,10 +1,13 @@
-﻿using System;
+﻿using Microsoft.Graphics.Canvas;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using Windows.Graphics.Imaging;
 using Windows.Media.Core;
 using Windows.Media.MediaProperties;
 using Windows.Media.Playback;
 using Windows.Storage;
+using Windows.Storage.Pickers;
 using Windows.System.Threading;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
@@ -16,8 +19,8 @@ namespace Video_Player
     public sealed partial class MyVideoControl : UserControl
     {
         private MediaPlaybackState playbackState;
-        private TimeSpan a = TimeSpan.FromMilliseconds(0);
-        private TimeSpan b = TimeSpan.FromMilliseconds(0);
+        private TimeSpan loopMarkerA = TimeSpan.FromMilliseconds(0);
+        private TimeSpan loopMarkerB = TimeSpan.FromMilliseconds(0);
         private ThreadPoolTimer PeriodicTimer;
         private int rotationValue = 0;
         private readonly List<MediaRotation> orientations = new List<MediaRotation>()
@@ -54,7 +57,9 @@ namespace Video_Player
             {
                 UpdateTimestamp();
                 UpdatePlaybackSpeed();
-                b = mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration;
+                loopMarkerB = mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration;
+                rangeSlider.Maximum = sender.PlaybackSession.NaturalDuration.TotalMilliseconds;
+                rangeSlider.RangeEnd = rangeSlider.Maximum;
             });
         }
 
@@ -92,7 +97,6 @@ namespace Video_Player
          */
         private void UpdateFromSlider()
         {
-            //System.Diagnostics.Debug.WriteLine("update from slider");
             mediaPlayer.MediaPlayer.PlaybackSession.Position = TimeSpan.FromMilliseconds(slider.Value / 100 * mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration.TotalMilliseconds);
             UpdateTimestamp();
         }
@@ -120,17 +124,17 @@ namespace Video_Player
 
         private bool IsPositionBetweenAandB(TimeSpan position, TimeSpan fullVideoLength)
         {
-            TimeSpan stop = b;
+            TimeSpan stop = loopMarkerB;
             TimeSpan pos = position;
-            if (a > b)
+            if (loopMarkerA > loopMarkerB)
             {
                 stop += fullVideoLength;
-                if (pos < b)
+                if (pos < loopMarkerB)
                 {
                     pos += fullVideoLength;
                 }
             }
-            return a < pos && pos < stop;
+            return loopMarkerA < pos && pos < stop;
         }
 
         private async void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
@@ -138,15 +142,11 @@ namespace Video_Player
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                  {
                      updateFromPlayer();
-                     /*if ((bool)toggleB.IsChecked && Math.Abs(mediaPlayer.MediaPlayer.PlaybackSession.Position.TotalMilliseconds - b.TotalMilliseconds) < 50)
-                     {
-                         mediaPlayer.MediaPlayer.PlaybackSession.Position = a;
-                     }*/
                      TimeSpan position = mediaPlayer.MediaPlayer.PlaybackSession.Position;
                      TimeSpan fullVideoLength = mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration;
                      if (!IsPositionBetweenAandB(position, fullVideoLength))
                      {
-                         mediaPlayer.MediaPlayer.PlaybackSession.Position = a;
+                         mediaPlayer.MediaPlayer.PlaybackSession.Position = loopMarkerA;
                      }
                  });
 
@@ -169,7 +169,7 @@ namespace Video_Player
 
         private void slider_ManipulationStarted(object sender, Windows.UI.Xaml.Input.ManipulationStartedRoutedEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine("Slider manipulation started");
+            Debug.WriteLine("Slider manipulation started");
             PrepareForSeek();
         }
 
@@ -217,15 +217,22 @@ namespace Video_Player
         {
             if (sender == toggleA)
             {
-                a = (bool)toggleA.IsChecked ? mediaPlayer.MediaPlayer.PlaybackSession.Position : TimeSpan.FromMilliseconds(0);
+                loopMarkerA = (bool)toggleA.IsChecked ? mediaPlayer.MediaPlayer.PlaybackSession.Position : TimeSpan.FromMilliseconds(0);
             }
             else if (sender == toggleB)
             {
-                b = (bool)toggleB.IsChecked ? mediaPlayer.MediaPlayer.PlaybackSession.Position : mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration;
+                loopMarkerB = (bool)toggleB.IsChecked ? mediaPlayer.MediaPlayer.PlaybackSession.Position : mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration;
             }
             else if (sender == toggleLoop)
             {
                 mediaPlayer.MediaPlayer.IsLoopingEnabled = (bool)toggleLoop.IsChecked;
+            }
+            else if (sender == toggleInvert)
+            {
+                var b = rangeSlider.Background;
+                rangeSlider.Background = rangeSlider.Foreground;
+                rangeSlider.Foreground = b;
+                SetLoopMarkers();
             }
         }
 
@@ -245,8 +252,47 @@ namespace Video_Player
                 rotationValue = rotationValue > 0 ? rotationValue - 1 : 3;
                 mediaPlayer.MediaPlayer.PlaybackSession.PlaybackRotation = orientations[rotationValue];
             }
+            else if (sender == take_snapshot)
+            {
+                savePicture();
+            }
         }
+        public async void savePicture()
+        {
+            SoftwareBitmap softwareBitmapImg;
+            CanvasDevice canvasDevice = CanvasDevice.GetSharedDevice();
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
+            {
+                SoftwareBitmap frameServerDest = new SoftwareBitmap(BitmapPixelFormat.Rgba8,
+                    (int)mediaPlayer.MediaPlayer.PlaybackSession.NaturalVideoWidth,
+                    (int)mediaPlayer.MediaPlayer.PlaybackSession.NaturalVideoHeight,
+                    BitmapAlphaMode.Premultiplied);
 
+                using (CanvasBitmap canvasBitmap = CanvasBitmap.CreateFromSoftwareBitmap(canvasDevice, frameServerDest))
+                {
+                    mediaPlayer.MediaPlayer.CopyFrameToVideoSurface(canvasBitmap);
+
+                    softwareBitmapImg = await SoftwareBitmap.CreateCopyFromSurfaceAsync(canvasBitmap);
+                    FileSavePicker savePicker = new FileSavePicker
+                    {
+                        SuggestedStartLocation = PickerLocationId.Desktop,
+                        SuggestedFileName = "Snapshot" + DateTime.Now.ToString("yyyyMMddhhmmss"),
+                    };
+                    savePicker.FileTypeChoices.Add("Image", new List<string>() { ".jpg" });
+                    StorageFile savefile = await savePicker.PickSaveFileAsync();
+                    if (savefile == null)
+                        return;
+
+
+                    using (var stream = await savefile.OpenAsync(FileAccessMode.ReadWrite))
+                    {
+                        var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
+                        encoder.SetSoftwareBitmap(softwareBitmapImg);
+                        await encoder.FlushAsync();
+                    }
+                }
+            });
+        }
 
         private void ReverseVideo(bool start)
         {
@@ -287,6 +333,17 @@ namespace Video_Player
                 PlayPause();
             }
             ReverseVideo((bool)reverseButton.IsChecked);
+        }
+
+        private void rangeSlider_ValueChanged(object sender, Microsoft.Toolkit.Uwp.UI.Controls.RangeChangedEventArgs e)
+        {
+            SetLoopMarkers();
+        }
+
+        private void SetLoopMarkers()
+        {
+            loopMarkerA = TimeSpan.FromMilliseconds((bool)toggleInvert.IsChecked ? rangeSlider.RangeEnd : rangeSlider.RangeStart);
+            loopMarkerB = TimeSpan.FromMilliseconds((bool)toggleInvert.IsChecked ? rangeSlider.RangeStart : rangeSlider.RangeEnd);
         }
     }
 }
