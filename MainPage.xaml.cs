@@ -66,26 +66,35 @@ namespace Video_Player
             ResizeTabs();
         }
 
+
         private void CoreWindow_CharacterReceived(CoreWindow sender, CharacterReceivedEventArgs args)
         {
             TabViewItem tab = (TabViewItem)Tabs.SelectedItem;
             MyVideoControl videoControl = tab.Content as MyVideoControl;
             switch (args.KeyCode)
             {
-                case 32:
+                case ' ':
+                case 'k':
                     videoControl.PlayPause();
                     break;
-                case 93:
+                case ']':
                     videoControl.MediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate += 0.1;
                     break;
-                case 91:
+                case '[':
                     videoControl.MediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate -= 0.1;
                     break;
-                case 106:
+                case 'j':
                     videoControl.MediaPlayer.MediaPlayer.PlaybackSession.Position -= TimeSpan.FromSeconds(5);
                     break;
-                case 108:
+                case 'l':
                     videoControl.MediaPlayer.MediaPlayer.PlaybackSession.Position += TimeSpan.FromSeconds(5);
+                    break;
+                case 'm':
+                    videoControl.MediaPlayer.MediaPlayer.IsMuted = !videoControl.MediaPlayer.MediaPlayer.IsMuted;
+                    tab.IconSource = new Microsoft.UI.Xaml.Controls.SymbolIconSource()
+                    {
+                        Symbol = videoControl.MediaPlayer.MediaPlayer.IsMuted ? Symbol.Mute : Symbol.Volume
+                    };
                     break;
                 default:
                     System.Diagnostics.Debug.WriteLine(args.KeyCode);
@@ -114,6 +123,7 @@ namespace Video_Player
             OpenButton.Visibility = Visibility.Collapsed;
             MyVideoControl videoControl = new MyVideoControl(file);
             TabViewItem tab = new TabViewItem() { MinWidth = 40, Header = file.Name, AllowDrop = true, Content = videoControl };
+            videoControl.Tab = tab;
             Tabs.TabItems.Add(tab);
             ResizeTabs();
             if (Tabs.TabItems.Count == 1)
@@ -153,7 +163,7 @@ namespace Video_Player
                 {
                     foreach (StorageFile appFile in items.OfType<StorageFile>())
                     {
-                        if (fileTypes.Contains(appFile.FileType)) 
+                        if (fileTypes.Contains(appFile.FileType))
                         {
                             AddTab(appFile);
                         }
@@ -176,7 +186,7 @@ namespace Video_Player
                 SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Desktop
             };
 
-            foreach (var fileType in fileTypes) 
+            foreach (var fileType in fileTypes)
             {
                 picker.FileTypeFilter.Add(fileType);
             }

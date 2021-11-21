@@ -1,4 +1,5 @@
 ﻿using Microsoft.Graphics.Canvas;
+using Microsoft.UI.Xaml.Controls;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,6 +12,7 @@ using Windows.Storage.Pickers;
 using Windows.System.Threading;
 using Windows.UI.Core;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 
 // The User Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234236
 
@@ -41,6 +43,7 @@ namespace Video_Player
             mediaPlayer.MediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
             mediaPlayer.MediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
             mediaPlayer.MediaPlayer.PlaybackSession.PlaybackRateChanged += PlaybackSession_PlaybackRateChanged;
+
         }
 
         private async void PlaybackSession_PlaybackRateChanged(MediaPlaybackSession sender, object args)
@@ -134,7 +137,7 @@ namespace Video_Player
                     pos += fullVideoLength;
                 }
             }
-            return loopMarkerA < pos && pos < stop;
+            return loopMarkerA <= pos && pos < stop;
         }
 
         private async void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
@@ -154,16 +157,23 @@ namespace Video_Player
 
         public MediaPlayerElement MediaPlayer { get { return mediaPlayer; } }
 
+        public TabViewItem Tab { get; internal set; }
+
         public void PlayPause(object sender = null, Windows.UI.Xaml.RoutedEventArgs e = null)
         {
             ReverseVideo(false);
             if (mediaPlayer.MediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
             {
                 mediaPlayer.MediaPlayer.Pause();
+                Tab.IconSource = null;
             }
             else
             {
                 mediaPlayer.MediaPlayer.Play();
+                Tab.IconSource = new Microsoft.UI.Xaml.Controls.SymbolIconSource()
+                {
+                    Symbol = mediaPlayer.MediaPlayer.IsMuted ? Symbol.Mute : Symbol.Volume
+                };
             }
         }
 
@@ -344,6 +354,11 @@ namespace Video_Player
         {
             loopMarkerA = TimeSpan.FromMilliseconds((bool)toggleInvert.IsChecked ? rangeSlider.RangeEnd : rangeSlider.RangeStart);
             loopMarkerB = TimeSpan.FromMilliseconds((bool)toggleInvert.IsChecked ? rangeSlider.RangeStart : rangeSlider.RangeEnd);
+        }
+
+        private void mediaPlayer_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            PlayPause();
         }
     }
 }

@@ -33,7 +33,8 @@
         <MediaPlayerElement
             x:Name="mediaPlayer"
             RelativePanel.Above="loopPanel"
-            RenderTransformOrigin="0.5,0.5">
+            RenderTransformOrigin="0.5,0.5"
+            Tapped="mediaPlayer_Tapped">
             <MediaPlayerElement.RenderTransform>
                 <ScaleTransform x:Name="scale" ScaleX="1" />
             </MediaPlayerElement.RenderTransform>
@@ -49,13 +50,15 @@
             <ToggleButton
                 x:Name="toggleLoop"
                 MinWidth="60"
-                Click="toggle_Click">
+                Click="toggle_Click"
+                ToolTipService.ToolTip="Loop">
                 <SymbolIcon Symbol="RepeatAll" />
             </ToggleButton>
             <ToggleButton
                 x:Name="toggleInvert"
                 MinWidth="60"
-                Click="toggle_Click">
+                Click="toggle_Click"
+                ToolTipService.ToolTip="Invert range">
                 <SymbolIcon Symbol="Trim" />
             </ToggleButton>
         </StackPanel>
