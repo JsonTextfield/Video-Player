@@ -39,11 +39,7 @@ namespace Video_Player
         {
             if (e.Parameter != null && e.Parameter is List<StorageFile> list)
             {
-                var files = list;
-                foreach (var f in files)
-                {
-                    AddTab(f);
-                }
+                list.ForEach(AddTab);
             }
         }
 
@@ -120,9 +116,10 @@ namespace Video_Player
 
         public void AddTab(StorageFile file)
         {
+            if (!fileTypes.Contains(file.FileType.ToLower())) return;
             OpenButton.Visibility = Visibility.Collapsed;
             MyVideoControl videoControl = new MyVideoControl(file);
-            TabViewItem tab = new TabViewItem() { MinWidth = 40, Header = file.Name, AllowDrop = true, Content = videoControl };
+            TabViewItem tab = new TabViewItem() { MinWidth = 60, Header = file.Name, AllowDrop = true, Content = videoControl };
             videoControl.Tab = tab;
             Tabs.TabItems.Add(tab);
             ResizeTabs();
@@ -138,6 +135,7 @@ namespace Video_Player
             foreach (TabViewItem tabViewItem in Tabs.TabItems)
             {
                 tabViewItem.MaxWidth = Math.Min(400, (Window.Current.Bounds.Width - 200) / Tabs.TabItems.Count);
+                tabViewItem.IsClosable = tabViewItem.IsSelected || tabViewItem.MaxWidth > 80;
             }
         }
 
@@ -150,6 +148,10 @@ namespace Video_Player
             sender.TabItems.Remove(args.Tab);
             sender.IsAddTabButtonVisible = false;
             ResizeTabs();
+            if (Tabs.TabItems.Count == 0)
+            {
+                CoreApplication.Exit();
+            }
         }
 
         private async void Page_Drop(object sender, DragEventArgs e)
@@ -163,7 +165,7 @@ namespace Video_Player
                 {
                     foreach (StorageFile appFile in items.OfType<StorageFile>())
                     {
-                        if (fileTypes.Contains(appFile.FileType))
+                        if (fileTypes.Contains(appFile.FileType.ToLower()))
                         {
                             AddTab(appFile);
                         }
@@ -186,10 +188,7 @@ namespace Video_Player
                 SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Desktop
             };
 
-            foreach (var fileType in fileTypes)
-            {
-                picker.FileTypeFilter.Add(fileType);
-            }
+            fileTypes.ForEach(picker.FileTypeFilter.Add);
 
             var files = await picker.PickMultipleFilesAsync();
             if (files.Count > 0)
@@ -209,6 +208,11 @@ namespace Video_Player
         private void OpenButton_Click(object sender, RoutedEventArgs e)
         {
             OpenFilePicker();
+        }
+
+        private void Tabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            ResizeTabs();
         }
     }
 }

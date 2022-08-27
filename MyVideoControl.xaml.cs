@@ -259,7 +259,7 @@ namespace Video_Player
             }
             else if (sender == rotateL)
             {
-                rotationValue = rotationValue > 0 ? rotationValue - 1 : 3;
+                rotationValue = (rotationValue + 3) % 4;
                 mediaPlayer.MediaPlayer.PlaybackSession.PlaybackRotation = orientations[rotationValue];
             }
             else if (sender == take_snapshot)
@@ -290,8 +290,7 @@ namespace Video_Player
                     };
                     savePicker.FileTypeChoices.Add("Image", new List<string>() { ".jpg" });
                     StorageFile savefile = await savePicker.PickSaveFileAsync();
-                    if (savefile == null)
-                        return;
+                    if (savefile == null) return;
 
 
                     using (var stream = await savefile.OpenAsync(FileAccessMode.ReadWrite))
@@ -357,6 +356,11 @@ namespace Video_Player
         }
 
         private void mediaPlayer_Tapped(object sender, TappedRoutedEventArgs e)
+        {
+            PlayPause();
+        }
+
+        private void mediaPlayer_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
             PlayPause();
         }

@@ -12,6 +12,12 @@
     SizeChanged="MainPage_SizeChanged"
     mc:Ignorable="d">
     <RelativePanel>
+        <Rectangle
+            Fill="Black"
+            RelativePanel.AlignBottomWithPanel="True"
+            RelativePanel.AlignLeftWithPanel="True"
+            RelativePanel.AlignRightWithPanel="True"
+            RelativePanel.AlignTopWithPanel="True" />
         <muxc:TabView
             x:Name="Tabs"
             Margin="0,-8,0,0"
@@ -24,6 +30,7 @@
             RelativePanel.AlignLeftWithPanel="True"
             RelativePanel.AlignRightWithPanel="True"
             RelativePanel.AlignTopWithPanel="True"
+            SelectionChanged="Tabs_SelectionChanged"
             TabCloseRequested="Tab_CloseRequested">
             <muxc:TabView.TabStripHeader>
                 <Grid x:Name="ShellTitlebarInset" Background="Transparent" />

@@ -64,10 +64,7 @@ namespace Video_Player
             }
             else
             {
-                foreach (var file in files)
-                {
-                    ((MainPage)rootFrame.Content).AddTab(file);
-                }
+                files.ForEach(((MainPage)rootFrame.Content).AddTab);
             }
             // Ensure the current window is active
             Window.Current.Activate();
