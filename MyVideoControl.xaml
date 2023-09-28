@@ -12,18 +12,22 @@
     <UserControl.ContextFlyout>
         <MenuFlyout>
             <MenuFlyoutItem
+                Icon="Undo"
                 Name="rotateL"
                 Click="MenuFlyoutItem_Click"
                 Text="Rotate Left" />
             <MenuFlyoutItem
+                Icon="Redo"
                 Name="rotateR"
                 Click="MenuFlyoutItem_Click"
                 Text="Rotate Right" />
             <MenuFlyoutItem
+                Icon="Switch"
                 Name="flipH"
                 Click="MenuFlyoutItem_Click"
                 Text="Flip Horizontally" />
             <MenuFlyoutItem
+                Icon="Camera"
                 Name="take_snapshot"
                 Click="MenuFlyoutItem_Click"
                 Text="Take Snapshot" />

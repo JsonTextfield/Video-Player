@@ -11,6 +11,7 @@ using Windows.Storage;
 using Windows.Storage.Pickers;
 using Windows.System.Threading;
 using Windows.UI.Core;
+using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Input;
 
@@ -109,16 +110,20 @@ namespace Video_Player
          */
         private void UpdateTimestamp()
         {
-            int milliseconds = (int)mediaPlayer.MediaPlayer.PlaybackSession.Position.TotalMilliseconds;
-            int seconds = milliseconds / 1000;
-            int minutes = seconds / 60;
-            int totalMilliseconds = (int)mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration.TotalMilliseconds;
-            int totalSeconds = totalMilliseconds / 1000;
-            int totalMinutes = totalSeconds / 60;
-            seconds %= 60;
-            totalSeconds %= 60;
-            timestamp.Text = string.Format("{0}:{1:D2}/{2}:{3:D2}", minutes, seconds, totalMinutes, totalSeconds);
+            TimeSpan currentTime = mediaPlayer.MediaPlayer.PlaybackSession.Position;
+            TimeSpan totalTime = mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration;
+
+            if (totalTime.Hours > 0)
+            {
+                timestamp.Text = $"{currentTime.ToString("h':'mm':'ss")}/{totalTime.ToString("h':'mm':'ss")}";
+            }
+            else
+            {
+                timestamp.Text = $"{currentTime.ToString("m':'ss")}/{totalTime.ToString("m':'ss")}";
+            }
+            return;
         }
+
 
         private void UpdatePlaybackSpeed()
         {
