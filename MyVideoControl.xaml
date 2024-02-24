@@ -62,7 +62,6 @@
                 x:Name="toggleLoop"
                 Padding="10"
                 Click="toggle_Click"
-                CornerRadius="0"
                 ToolTipService.ToolTip="Loop">
                 <SymbolIcon Symbol="RepeatAll" />
             </ToggleButton>
@@ -70,7 +69,6 @@
                 x:Name="toggleInvert"
                 Padding="10"
                 Click="toggle_Click"
-                CornerRadius="0"
                 ToolTipService.ToolTip="Invert range">
                 <SymbolIcon Symbol="Trim" />
             </ToggleButton>
@@ -81,12 +79,23 @@
             Margin="10,0,10,0"
             VerticalAlignment="Center"
             Minimum="0"
-            RelativePanel.AlignBottomWith="loopPanel"
+            RelativePanel.AlignVerticalCenterWith="loopPanel"
             RelativePanel.AlignLeftWith="slider"
             RelativePanel.AlignRightWith="slider"
-            RelativePanel.AlignTopWith="loopPanel"
             ValueChanged="rangeSlider_ValueChanged" />
 
+        <Button
+            x:Name="muteToggle"
+            Padding="10"
+            Click="toggle_Click"
+            ToolTipService.ToolTip="Mute/Unmute"
+            RelativePanel.Above="space"
+            RelativePanel.RightOf="rangeSlider"
+            RelativePanel.AlignRightWithPanel="True">
+            <SymbolIcon Symbol="Volume" />
+        </Button>
+        
+        
         <Rectangle
             Name="space"
             Height="5"
@@ -105,7 +114,6 @@
                 Padding="10"
                 AllowFocusOnInteraction="False"
                 Click="PlayPause"
-                CornerRadius="0"
                 Visibility="Visible">
                 <SymbolIcon Symbol="Play" />
             </Button>
@@ -113,8 +121,7 @@
             <ToggleButton
                 x:Name="reverseButton"
                 Padding="10"
-                Click="reverseButton_Checked"
-                CornerRadius="0"
+                Click="ReverseButton_Checked"
                 RenderTransformOrigin="0.5,0.5">
                 <ToggleButton.RenderTransform>
                     <ScaleTransform ScaleX="-1" />

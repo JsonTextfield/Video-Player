@@ -6,7 +6,6 @@ using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.UI.Core;
-using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Navigation;
@@ -37,31 +36,11 @@ namespace Video_Player
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            if (e.Parameter != null && e.Parameter is List<StorageFile> list)
-            {
-                list.ForEach(AddTab);
-            }
+            List<StorageFile> list = e.Parameter as List<StorageFile>;
+            list?.ForEach(AddTab);
         }
 
-        private async void showMessage(string message)
-        {
-            var messageDialog = new MessageDialog(message);
-
-            // Set the command that will be invoked by default
-            messageDialog.DefaultCommandIndex = 0;
-
-            // Set the command to be invoked when escape is pressed
-            messageDialog.CancelCommandIndex = 1;
-
-            // Show the message dialog
-            await messageDialog.ShowAsync();
-        }
-
-        private void MainPage_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            ResizeTabs();
-        }
-
+        private void MainPage_SizeChanged(object sender, SizeChangedEventArgs e) => ResizeTabs();
 
         private void CoreWindow_CharacterReceived(CoreWindow sender, CharacterReceivedEventArgs args)
         {
@@ -72,6 +51,15 @@ namespace Video_Player
                 case ' ':
                 case 'k':
                     videoControl.PlayPause();
+                    break;
+                case 'z':
+                    videoControl.SetLoopMarkerA();
+                    break;
+                case 'x':
+                    videoControl.SetLoopMarkerB();
+                    break;
+                case 'c':
+                    videoControl.ResetLoopMarkers();
                     break;
                 case ']':
                     videoControl.MediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate += 0.1;
@@ -86,7 +74,7 @@ namespace Video_Player
                     videoControl.MediaPlayer.MediaPlayer.PlaybackSession.Position += TimeSpan.FromSeconds(5);
                     break;
                 case 'm':
-                    videoControl.MediaPlayer.MediaPlayer.IsMuted = !videoControl.MediaPlayer.MediaPlayer.IsMuted;
+                    videoControl.MuteUnmute();
                     tab.IconSource = new Microsoft.UI.Xaml.Controls.SymbolIconSource()
                     {
                         Symbol = videoControl.MediaPlayer.MediaPlayer.IsMuted ? Symbol.Mute : Symbol.Volume
@@ -119,7 +107,13 @@ namespace Video_Player
             if (!fileTypes.Contains(file.FileType.ToLower())) return;
             OpenButton.Visibility = Visibility.Collapsed;
             MyVideoControl videoControl = new MyVideoControl(file);
-            TabViewItem tab = new TabViewItem() { MinWidth = 60, Header = file.Name, AllowDrop = true, Content = videoControl };
+            TabViewItem tab = new TabViewItem()
+            {
+                MinWidth = 60,
+                Header = file.Name,
+                AllowDrop = true,
+                Content = videoControl
+            };
             videoControl.Tab = tab;
             Tabs.TabItems.Add(tab);
             ResizeTabs();
@@ -131,7 +125,6 @@ namespace Video_Player
 
         private void ResizeTabs()
         {
-            Tabs.CloseButtonOverlayMode = TabViewCloseButtonOverlayMode.OnPointerOver;
             foreach (TabViewItem tabViewItem in Tabs.TabItems)
             {
                 tabViewItem.MaxWidth = Math.Min(400, (Window.Current.Bounds.Width - 200) / Tabs.TabItems.Count);
@@ -143,7 +136,7 @@ namespace Video_Player
         {
             MyVideoControl videoControl = args.Tab.Content as MyVideoControl;
             videoControl.MediaPlayer.MediaPlayer.Pause();
-            //videoControl.MediaPlayer.MediaPlayer.Dispose();
+            videoControl.MediaPlayer.MediaPlayer.Dispose();
             sender.IsAddTabButtonVisible = true;
             sender.TabItems.Remove(args.Tab);
             sender.IsAddTabButtonVisible = false;
@@ -191,17 +184,7 @@ namespace Video_Player
             fileTypes.ForEach(picker.FileTypeFilter.Add);
 
             var files = await picker.PickMultipleFilesAsync();
-            if (files.Count > 0)
-            {
-                // Application now has read/write access to the picked file(s)
-                foreach (StorageFile file in files)
-                {
-                    if (file != null)
-                    {
-                        AddTab(file);
-                    }
-                }
-            }
+            files.Where(file => file != null).ToList().ForEach(AddTab);
 
         }
 

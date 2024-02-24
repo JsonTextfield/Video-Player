@@ -71,17 +71,12 @@ namespace Video_Player
         {
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                switch (sender.PlaybackState)
+                playPause.Content = sender.PlaybackState switch
                 {
-                    case MediaPlaybackState.Playing:
-                        playPause.Content = new SymbolIcon(Symbol.Pause);
-                        break;
-                    case MediaPlaybackState.Paused:
-                        playPause.Content = new SymbolIcon(Symbol.Play);
-                        break;
-                    default:
-                        break;
-                }
+                     MediaPlaybackState.Playing => new SymbolIcon(Symbol.Pause),
+                     MediaPlaybackState.Paused => new SymbolIcon(Symbol.Play),
+                    _ => playPause.Content,
+                };
             });
         }
 
@@ -164,7 +159,34 @@ namespace Video_Player
 
         public TabViewItem Tab { get; internal set; }
 
-        public void PlayPause(object sender = null, Windows.UI.Xaml.RoutedEventArgs e = null)
+        public void SetLoopMarkerA()
+        {
+            loopMarkerA = mediaPlayer.MediaPlayer.PlaybackSession.Position;
+            rangeSlider.RangeStart = loopMarkerA.Milliseconds;
+        }
+
+        public void SetLoopMarkerB()
+        {
+            loopMarkerB = mediaPlayer.MediaPlayer.PlaybackSession.Position;
+            rangeSlider.RangeEnd = loopMarkerB.Milliseconds;
+        }
+
+        public void ResetLoopMarkers()
+        {
+            loopMarkerA = TimeSpan.FromMilliseconds(0);
+            loopMarkerB = mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration;
+
+            rangeSlider.RangeStart = 0;
+            rangeSlider.RangeEnd = mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration.TotalMilliseconds;
+        }
+
+        public void MuteUnmute()
+        {
+            mediaPlayer.MediaPlayer.IsMuted = !mediaPlayer.MediaPlayer.IsMuted;
+            muteToggle.Content = mediaPlayer.MediaPlayer.IsMuted ? Symbol.Mute : Symbol.Volume;
+        }
+
+        public void PlayPause(object sender = null, RoutedEventArgs e = null)
         {
             ReverseVideo(false);
             if (mediaPlayer.MediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
@@ -249,6 +271,10 @@ namespace Video_Player
                 rangeSlider.Foreground = b;
                 SetLoopMarkers();
             }
+            else if (sender == muteToggle)
+            {
+                MuteUnmute();
+            }
         }
 
         private void MenuFlyoutItem_Click(object sender, Windows.UI.Xaml.RoutedEventArgs e)
@@ -269,10 +295,10 @@ namespace Video_Player
             }
             else if (sender == take_snapshot)
             {
-                savePicture();
+                SavePicture();
             }
         }
-        public async void savePicture()
+        public async void SavePicture()
         {
             SoftwareBitmap softwareBitmapImg;
             CanvasDevice canvasDevice = CanvasDevice.GetSharedDevice();
@@ -332,15 +358,12 @@ namespace Video_Player
             }
             else
             {
-                if (PeriodicTimer != null)
-                {
-                    PeriodicTimer.Cancel();
-                }
+                PeriodicTimer?.Cancel();
                 reverseButton.IsChecked = false;
             }
         }
 
-        private void reverseButton_Checked(object sender, Windows.UI.Xaml.RoutedEventArgs e)
+        private void ReverseButton_Checked(object sender, RoutedEventArgs e)
         {
             if (mediaPlayer.MediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
             {
@@ -349,25 +372,15 @@ namespace Video_Player
             ReverseVideo((bool)reverseButton.IsChecked);
         }
 
-        private void rangeSlider_ValueChanged(object sender, Microsoft.Toolkit.Uwp.UI.Controls.RangeChangedEventArgs e)
-        {
-            SetLoopMarkers();
-        }
-
+        private void rangeSlider_ValueChanged(object sender, Microsoft.Toolkit.Uwp.UI.Controls.RangeChangedEventArgs e) => SetLoopMarkers();
         private void SetLoopMarkers()
         {
             loopMarkerA = TimeSpan.FromMilliseconds((bool)toggleInvert.IsChecked ? rangeSlider.RangeEnd : rangeSlider.RangeStart);
             loopMarkerB = TimeSpan.FromMilliseconds((bool)toggleInvert.IsChecked ? rangeSlider.RangeStart : rangeSlider.RangeEnd);
         }
 
-        private void mediaPlayer_Tapped(object sender, TappedRoutedEventArgs e)
-        {
-            PlayPause();
-        }
+        private void mediaPlayer_Tapped(object sender, TappedRoutedEventArgs e) => PlayPause();
 
-        private void mediaPlayer_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
-        {
-            PlayPause();
-        }
+        private void mediaPlayer_DoubleTapped(object sender, DoubleTappedRoutedEventArgs e) => PlayPause();
     }
 }
