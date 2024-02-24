@@ -6,18 +6,12 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     AllowDrop="True"
-    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+    Background="{ThemeResource SystemAccentColor}"
     DragOver="Drag_over"
     Drop="Page_Drop"
     SizeChanged="MainPage_SizeChanged"
     mc:Ignorable="d">
     <RelativePanel>
-        <Rectangle
-            Fill="Black"
-            RelativePanel.AlignBottomWithPanel="True"
-            RelativePanel.AlignLeftWithPanel="True"
-            RelativePanel.AlignRightWithPanel="True"
-            RelativePanel.AlignTopWithPanel="True" />
         <muxc:TabView
             x:Name="Tabs"
             Margin="0,-8,0,0"
@@ -41,22 +35,22 @@
         </muxc:TabView>
 
         <Rectangle
+            Fill="Transparent"
             AllowDrop="True"
             DragOver="Drag_over"
             Drop="Page_Drop"
-            Fill="Transparent"
+            Tapped="Rectangle_Tapped"
             RelativePanel.AlignBottomWithPanel="True"
             RelativePanel.AlignLeftWithPanel="True"
             RelativePanel.AlignRightWithPanel="True"
             RelativePanel.Below="Tabs" />
 
-        <Button
-            x:Name="OpenButton"
-            Padding="40"
-            Click="OpenButton_Click"
-            Content="Open"
+        <TextBlock
+            Name="textBlock"
+            Text="Click or drag to open a file"
             RelativePanel.AlignHorizontalCenterWithPanel="True"
-            RelativePanel.AlignVerticalCenterWithPanel="True" />
+            RelativePanel.AlignVerticalCenterWithPanel="True"
+            Foreground="White" />
 
     </RelativePanel>
 </Page>

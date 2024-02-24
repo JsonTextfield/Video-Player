@@ -62,16 +62,14 @@
             <ToggleButton
                 x:Name="toggleLoop"
                 Padding="10"
-                Click="Toggle_Click"
-                ToolTipService.ToolTip="Loop">
+                Click="Toggle_Click">
                 <SymbolIcon Symbol="RepeatAll" />
             </ToggleButton>
 
             <ToggleButton
                 x:Name="toggleInvert"
                 Padding="10"
-                Click="Toggle_Click"
-                ToolTipService.ToolTip="Invert range">
+                Click="Toggle_Click">
                 <SymbolIcon Symbol="Trim" />
             </ToggleButton>
 
@@ -139,8 +137,7 @@
             <Button
                 x:Name="muteToggle"
                 Padding="10"
-                Click="Toggle_Click"
-                ToolTipService.ToolTip="Mute/Unmute">
+                Click="Toggle_Click">
                 <SymbolIcon Symbol="Volume" />
             </Button>
 

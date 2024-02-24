@@ -8,6 +8,7 @@ using Windows.Storage;
 using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
@@ -85,7 +86,7 @@ namespace Video_Player
         public void AddTab(StorageFile file)
         {
             if (!fileTypes.Contains(file.FileType.ToLower())) return;
-            OpenButton.Visibility = Visibility.Collapsed;
+            textBlock.Visibility = Visibility.Collapsed;
             MyVideoControl videoControl = new MyVideoControl(file);
             TabViewItem tab = new TabViewItem()
             {
@@ -166,8 +167,8 @@ namespace Video_Player
 
         }
 
-        private void OpenButton_Click(object sender, RoutedEventArgs e) => OpenFilePicker();
-
         private void Tabs_SelectionChanged(object sender, SelectionChangedEventArgs e) => ResizeTabs();
+
+        private void Rectangle_Tapped(object sender, TappedRoutedEventArgs e) => OpenFilePicker();
     }
 }
