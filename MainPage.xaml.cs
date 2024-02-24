@@ -38,6 +38,7 @@ namespace Video_Player
         {
             List<StorageFile> list = e.Parameter as List<StorageFile>;
             list?.ForEach(AddTab);
+            ResizeTabs();
         }
 
         private void MainPage_SizeChanged(object sender, SizeChangedEventArgs e) => ResizeTabs();
@@ -49,36 +50,15 @@ namespace Video_Player
             switch (args.KeyCode)
             {
                 case ' ':
-                case 'k':
                     videoControl.PlayPause();
                     break;
-                case 'z':
-                    videoControl.SetLoopMarkerA();
-                    break;
-                case 'x':
-                    videoControl.SetLoopMarkerB();
-                    break;
-                case 'c':
-                    videoControl.ResetLoopMarkers();
-                    break;
                 case ']':
-                    videoControl.MediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate += 0.1;
+                    videoControl.MediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate =
+                        Math.Min(1, videoControl.MediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate + 0.1);
                     break;
                 case '[':
-                    videoControl.MediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate -= 0.1;
-                    break;
-                case 'j':
-                    videoControl.MediaPlayer.MediaPlayer.PlaybackSession.Position -= TimeSpan.FromSeconds(5);
-                    break;
-                case 'l':
-                    videoControl.MediaPlayer.MediaPlayer.PlaybackSession.Position += TimeSpan.FromSeconds(5);
-                    break;
-                case 'm':
-                    videoControl.MuteUnmute();
-                    tab.IconSource = new Microsoft.UI.Xaml.Controls.SymbolIconSource()
-                    {
-                        Symbol = videoControl.MediaPlayer.MediaPlayer.IsMuted ? Symbol.Mute : Symbol.Volume
-                    };
+                    videoControl.MediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate =
+                        Math.Max(0.1, videoControl.MediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate - 0.1);
                     break;
                 default:
                     System.Diagnostics.Debug.WriteLine(args.KeyCode);
@@ -116,14 +96,13 @@ namespace Video_Player
             };
             videoControl.Tab = tab;
             Tabs.TabItems.Add(tab);
-            ResizeTabs();
             if (Tabs.TabItems.Count == 1)
             {
                 Tabs.SelectedIndex = 0;
             }
         }
 
-        private void ResizeTabs()
+        public void ResizeTabs()
         {
             foreach (TabViewItem tabViewItem in Tabs.TabItems)
             {
@@ -163,15 +142,13 @@ namespace Video_Player
                             AddTab(appFile);
                         }
                     }
+                    ResizeTabs();
                 }
                 locked = false;
             }
         }
 
-        private void Drag_over(object sender, DragEventArgs e)
-        {
-            e.AcceptedOperation = DataPackageOperation.Copy;
-        }
+        private void Drag_over(object sender, DragEventArgs e) => e.AcceptedOperation = DataPackageOperation.Copy;
 
         private async void OpenFilePicker()
         {
@@ -185,17 +162,12 @@ namespace Video_Player
 
             var files = await picker.PickMultipleFilesAsync();
             files.Where(file => file != null).ToList().ForEach(AddTab);
-
-        }
-
-        private void OpenButton_Click(object sender, RoutedEventArgs e)
-        {
-            OpenFilePicker();
-        }
-
-        private void Tabs_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
             ResizeTabs();
+
         }
+
+        private void OpenButton_Click(object sender, RoutedEventArgs e) => OpenFilePicker();
+
+        private void Tabs_SelectionChanged(object sender, SelectionChangedEventArgs e) => ResizeTabs();
     }
 }

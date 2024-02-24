@@ -43,10 +43,10 @@
             RelativePanel.AlignTopWithPanel="True" />
         <MediaPlayerElement
             x:Name="mediaPlayer"
-            DoubleTapped="mediaPlayer_DoubleTapped"
+            DoubleTapped="MediaPlayer_DoubleTapped"
             RelativePanel.Above="loopPanel"
             RenderTransformOrigin="0.5,0.5"
-            Tapped="mediaPlayer_Tapped">
+            Tapped="MediaPlayer_Tapped">
             <MediaPlayerElement.RenderTransform>
                 <ScaleTransform x:Name="scale" ScaleX="1" />
             </MediaPlayerElement.RenderTransform>
@@ -57,21 +57,36 @@
             Orientation="Horizontal"
             RelativePanel.Above="space"
             RelativePanel.AlignLeftWithPanel="True"
-            Spacing="1">
+            Spacing="5">
+
             <ToggleButton
                 x:Name="toggleLoop"
                 Padding="10"
-                Click="toggle_Click"
+                Click="Toggle_Click"
                 ToolTipService.ToolTip="Loop">
                 <SymbolIcon Symbol="RepeatAll" />
             </ToggleButton>
+
             <ToggleButton
                 x:Name="toggleInvert"
                 Padding="10"
-                Click="toggle_Click"
+                Click="Toggle_Click"
                 ToolTipService.ToolTip="Invert range">
                 <SymbolIcon Symbol="Trim" />
             </ToggleButton>
+
+            <ToggleButton
+                Padding="10"
+                x:Name="toggleA"
+                Click="Toggle_Click"
+                Content="A" />
+
+            <ToggleButton
+                Padding="10"
+                x:Name="toggleB"
+                Click="Toggle_Click"
+                Content="B" />
+
         </StackPanel>
 
         <controls:RangeSelector
@@ -79,36 +94,28 @@
             Margin="10,0,10,0"
             VerticalAlignment="Center"
             Minimum="0"
-            RelativePanel.AlignVerticalCenterWith="loopPanel"
-            RelativePanel.AlignLeftWith="slider"
-            RelativePanel.AlignRightWith="slider"
-            ValueChanged="rangeSlider_ValueChanged" />
+            RelativePanel.AlignBottomWith="loopPanel"
+            RelativePanel.AlignTopWith="loopPanel"
+            RelativePanel.RightOf="loopPanel"
+            RelativePanel.LeftOf="timestamp"
+            ValueChanged="RangeSlider_ValueChanged" />
 
-        <Button
-            x:Name="muteToggle"
-            Padding="10"
-            Click="toggle_Click"
-            ToolTipService.ToolTip="Mute/Unmute"
-            RelativePanel.Above="space"
-            RelativePanel.RightOf="rangeSlider"
-            RelativePanel.AlignRightWithPanel="True">
-            <SymbolIcon Symbol="Volume" />
-        </Button>
-        
-        
+
         <Rectangle
             Name="space"
             Height="5"
             Fill="Transparent"
-            RelativePanel.Above="slider"
+            RelativePanel.Above="ButtonPanel"
             RelativePanel.AlignLeftWithPanel="True"
             RelativePanel.AlignRightWithPanel="True" />
+
         <StackPanel
             Name="ButtonPanel"
             Orientation="Horizontal"
             RelativePanel.AlignBottomWithPanel="True"
             RelativePanel.AlignLeftWithPanel="True"
-            Spacing="1">
+            Spacing="5">
+
             <Button
                 x:Name="playPause"
                 Padding="10"
@@ -129,28 +136,16 @@
                 <SymbolIcon Symbol="Play" />
             </ToggleButton>
 
-            <ToggleButton
-                x:Name="toggleA"
-                MinWidth="60"
-                Click="toggle_Click"
-                Content="A"
-                Visibility="Collapsed" />
+            <Button
+                x:Name="muteToggle"
+                Padding="10"
+                Click="Toggle_Click"
+                ToolTipService.ToolTip="Mute/Unmute">
+                <SymbolIcon Symbol="Volume" />
+            </Button>
 
-            <ToggleButton
-                x:Name="toggleB"
-                MinWidth="60"
-                Click="toggle_Click"
-                Content="B"
-                Visibility="Collapsed" />
-
-            <TextBlock
-                x:Name="videoSpeedLabel"
-                MinWidth="60"
-                VerticalAlignment="Center"
-                Text="1.00"
-                TextAlignment="Center"
-                Visibility="Collapsed" />
         </StackPanel>
+
         <Slider
             x:Name="slider"
             Margin="10,0,10,0"
@@ -158,15 +153,29 @@
             IsThumbToolTipEnabled="False"
             ManipulationCompleted="Slider_ManipulationCompleted"
             ManipulationMode="All"
-            ManipulationStarted="slider_ManipulationStarted"
+            ManipulationStarted="Slider_ManipulationStarted"
             RelativePanel.AlignBottomWith="ButtonPanel"
             RelativePanel.AlignTopWith="ButtonPanel"
-            RelativePanel.LeftOf="timestamp"
-            RelativePanel.RightOf="ButtonPanel"
+            RelativePanel.AlignLeftWith="rangeSlider"
+            RelativePanel.AlignRightWith="rangeSlider"
             StepFrequency="0.0001"
-            ValueChanged="slider_ValueChanged" />
+            ValueChanged="Slider_ValueChanged" />
 
         <!--  ManipulationDelta="slider_ManipulationDelta"  -->
+
+        <TextBlock
+            x:Name="videoSpeedLabel"
+            Padding="5"
+            Text="1.00"
+            Foreground="White"
+            RelativePanel.RightOf="slider"
+            RelativePanel.AlignTopWith="loopPanel"
+            RelativePanel.AlignBottomWith="loopPanel"
+            RelativePanel.AlignRightWithPanel="True"
+            TextAlignment="Center"
+            VerticalAlignment="Center"
+            Visibility="Collapsed"/>
+
         <TextBlock
             x:Name="timestamp"
             Padding="5"
@@ -174,9 +183,9 @@
             RelativePanel.AlignBottomWithPanel="True"
             RelativePanel.AlignRightWithPanel="True"
             RelativePanel.AlignTopWith="ButtonPanel"
+            Foreground="White"
             Text="0:00/0:00"
-            TextAlignment="Center"
-            Visibility="Visible" />
+            TextAlignment="Center" />
 
     </RelativePanel>
 

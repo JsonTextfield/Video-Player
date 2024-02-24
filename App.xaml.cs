@@ -65,6 +65,7 @@ namespace Video_Player
             else
             {
                 files.ForEach(((MainPage)rootFrame.Content).AddTab);
+                ((MainPage)rootFrame.Content).ResizeTabs();
             }
             // Ensure the current window is active
             Window.Current.Activate();
