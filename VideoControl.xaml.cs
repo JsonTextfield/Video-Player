@@ -21,37 +21,29 @@ using Windows.UI.Xaml.Input;
 
 namespace Video_Player
 {
-    public sealed partial class MyVideoControl : UserControl
+    public sealed partial class VideoControl : UserControl
     {
         private MediaPlaybackState playbackState;
-        private TimeSpan loopMarkerA = TimeSpan.FromMilliseconds(0);
-        private TimeSpan loopMarkerB = TimeSpan.FromMilliseconds(0);
-        private ThreadPoolTimer PeriodicTimer;
-        private int rotationValue = 0;
-        private readonly List<MediaRotation> orientations = new List<MediaRotation>()
-        {
-            MediaRotation.None,
-            MediaRotation.Clockwise90Degrees,
-            MediaRotation.Clockwise180Degrees,
-            MediaRotation.Clockwise270Degrees
-        };
+        private ThreadPoolTimer periodicTimer;
 
-        public MediaPlayerElement MediaPlayer { get { return mediaPlayer; } }
+        private double loopMarkerA = 0;
+        private double loopMarkerB = 0;
+
+        public MediaPlayer MediaPlayer { get { return mediaPlayerElement.MediaPlayer; } }
 
         public TabViewItem Tab { get; internal set; }
 
         //private bool pingpong = false;
-        public MyVideoControl(StorageFile file)
+        public VideoControl(StorageFile file)
         {
             InitializeComponent();
 
-            mediaPlayer.Source = MediaSource.CreateFromStorageFile(file);
+            mediaPlayerElement.Source = MediaSource.CreateFromStorageFile(file);
 
-            mediaPlayer.MediaPlayer.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
-            mediaPlayer.MediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
-            mediaPlayer.MediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
-            mediaPlayer.MediaPlayer.PlaybackSession.PlaybackRateChanged += PlaybackSession_PlaybackRateChanged;
-
+            MediaPlayer.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
+            MediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
+            MediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
+            MediaPlayer.PlaybackSession.PlaybackRateChanged += PlaybackSession_PlaybackRateChanged;
         }
 
         private async void PlaybackSession_PlaybackRateChanged(MediaPlaybackSession sender, object args)
@@ -65,9 +57,7 @@ namespace Video_Player
             {
                 UpdateTimestamp();
                 UpdatePlaybackSpeed();
-                loopMarkerB = mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration;
-                rangeSlider.Maximum = sender.PlaybackSession.NaturalDuration.TotalMilliseconds;
-                rangeSlider.RangeEnd = rangeSlider.Maximum;
+                rangeSlider.RangeEnd = rangeSlider.Maximum = loopMarkerB = sender.PlaybackSession.NaturalDuration.TotalMilliseconds;
             });
         }
 
@@ -81,6 +71,7 @@ namespace Video_Player
                     MediaPlaybackState.Paused => new SymbolIcon(Symbol.Play),
                     _ => playPause.Content,
                 };
+                ((TabTitle)Tab.Header).ShowIcon(sender.PlaybackState == MediaPlaybackState.Playing);
             });
         }
 
@@ -91,8 +82,8 @@ namespace Video_Player
         {
             slider.ValueChanged -= Slider_ValueChanged;
             slider.Value =
-                mediaPlayer.MediaPlayer.PlaybackSession.Position.TotalSeconds
-                / mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration.TotalSeconds
+                MediaPlayer.PlaybackSession.Position.TotalSeconds
+                / MediaPlayer.PlaybackSession.NaturalDuration.TotalSeconds
                 * 100;
             UpdateTimestamp();
             slider.ValueChanged += Slider_ValueChanged;
@@ -103,8 +94,8 @@ namespace Video_Player
          */
         private void UpdateFromSlider()
         {
-            mediaPlayer.MediaPlayer.PlaybackSession.Position = TimeSpan.FromMilliseconds(
-                slider.Value / 100 * mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration.TotalMilliseconds
+            MediaPlayer.PlaybackSession.Position = TimeSpan.FromMilliseconds(
+                slider.Value / 100 * MediaPlayer.PlaybackSession.NaturalDuration.TotalMilliseconds
             );
             UpdateTimestamp();
         }
@@ -114,8 +105,8 @@ namespace Video_Player
          */
         private void UpdateTimestamp()
         {
-            TimeSpan currentTime = mediaPlayer.MediaPlayer.PlaybackSession.Position;
-            TimeSpan totalTime = mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration;
+            TimeSpan currentTime = MediaPlayer.PlaybackSession.Position;
+            TimeSpan totalTime = MediaPlayer.PlaybackSession.NaturalDuration;
 
             timestamp.Text = totalTime.Hours > 0 ?
                 $"{currentTime:h':'mm':'ss}/{totalTime:h':'mm':'ss}" :
@@ -125,16 +116,13 @@ namespace Video_Player
 
         private void UpdatePlaybackSpeed()
         {
-            videoSpeedLabel.Text = string.Format(
-                "{0:F2}",
-                mediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate
-            );
+            videoSpeedLabel.Text = string.Format("{0:F2}", MediaPlayer.PlaybackSession.PlaybackRate);
         }
 
-        private bool IsPositionBetweenAandB(TimeSpan position, TimeSpan fullVideoLength)
+        private bool IsPositionBetweenAandB(double position, double fullVideoLength)
         {
-            TimeSpan stop = loopMarkerB;
-            TimeSpan pos = position;
+            double stop = loopMarkerB;
+            double pos = position;
             if (loopMarkerA > loopMarkerB)
             {
                 stop += fullVideoLength;
@@ -151,47 +139,30 @@ namespace Video_Player
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                  {
                      UpdateFromPlayer();
-                     TimeSpan position = mediaPlayer.MediaPlayer.PlaybackSession.Position;
-                     TimeSpan fullVideoLength = mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration;
-                     if (!IsPositionBetweenAandB(position, fullVideoLength))
+                     if (!IsPositionBetweenAandB(sender.Position.TotalMilliseconds, sender.NaturalDuration.TotalMilliseconds))
                      {
-                         mediaPlayer.MediaPlayer.PlaybackSession.Position = loopMarkerA;
+                         sender.Position = TimeSpan.FromMilliseconds(loopMarkerA);
                      }
-                 });
-
-        }
-
-        public void SetLoopMarkerA()
-        {
-            toggleA.IsChecked = !toggleA.IsChecked;
-        }
-
-        public void SetLoopMarkerB()
-        {
-            toggleB.IsChecked = !toggleB.IsChecked;
+                 }
+            );
         }
 
         public void MuteUnmute()
         {
-            mediaPlayer.MediaPlayer.IsMuted = !mediaPlayer.MediaPlayer.IsMuted;
-            muteToggle.Content = new SymbolIcon(mediaPlayer.MediaPlayer.IsMuted ? Symbol.Mute : Symbol.Volume);
+            MediaPlayer.IsMuted = !MediaPlayer.IsMuted;
+            muteToggle.Content = new SymbolIcon(MediaPlayer.IsMuted ? Symbol.Mute : Symbol.Volume);
         }
 
         public void PlayPause(object sender = null, RoutedEventArgs e = null)
         {
             ReverseVideo(false);
-            if (mediaPlayer.MediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
+            if (MediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
             {
-                mediaPlayer.MediaPlayer.Pause();
-                Tab.IconSource = null;
+                MediaPlayer.Pause();
             }
             else
             {
-                mediaPlayer.MediaPlayer.Play();
-                Tab.IconSource = new Microsoft.UI.Xaml.Controls.SymbolIconSource()
-                {
-                    Symbol = Symbol.Play
-                };
+                MediaPlayer.Play();
             }
         }
 
@@ -213,10 +184,10 @@ namespace Video_Player
          */
         private void PrepareForSeek()
         {
-            playbackState = mediaPlayer.MediaPlayer.PlaybackSession.PlaybackState;
-            mediaPlayer.MediaPlayer.Pause();
-            mediaPlayer.MediaPlayer.PlaybackSession.PositionChanged -= PlaybackSession_PositionChanged;
-            Debug.WriteLine(mediaPlayer.MediaPlayer.PlaybackSession.PlaybackState);
+            playbackState = MediaPlayer.PlaybackSession.PlaybackState;
+            MediaPlayer.Pause();
+            MediaPlayer.PlaybackSession.PositionChanged -= PlaybackSession_PositionChanged;
+            Debug.WriteLine(MediaPlayer.PlaybackSession.PlaybackState);
         }
 
         /**
@@ -224,16 +195,11 @@ namespace Video_Player
          */
         private void FinishedSeeking()
         {
-            switch (playbackState)
+            if (playbackState == MediaPlaybackState.Playing)
             {
-                case MediaPlaybackState.Playing:
-                    mediaPlayer.MediaPlayer.Play();
-                    break;
-                case MediaPlaybackState.Paused:
-                default:
-                    break;
+                MediaPlayer.Play();
             }
-            mediaPlayer.MediaPlayer.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
+            MediaPlayer.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
         }
 
         private void Slider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e) => UpdateFromSlider();
@@ -242,25 +208,21 @@ namespace Video_Player
         {
             if (sender == toggleA)
             {
-                loopMarkerA =
+                rangeSlider.RangeStart = loopMarkerA =
                     (bool)toggleA.IsChecked ?
-                    mediaPlayer.MediaPlayer.PlaybackSession.Position :
-                    TimeSpan.FromMilliseconds(0);
-
-                rangeSlider.RangeStart = loopMarkerA.TotalMilliseconds;
+                    MediaPlayer.PlaybackSession.Position.TotalMilliseconds :
+                    0;
             }
             else if (sender == toggleB)
             {
-                loopMarkerB =
+                rangeSlider.RangeEnd = loopMarkerB =
                     (bool)toggleB.IsChecked ?
-                    mediaPlayer.MediaPlayer.PlaybackSession.Position :
-                    mediaPlayer.MediaPlayer.PlaybackSession.NaturalDuration;
-
-                rangeSlider.RangeEnd = loopMarkerB.TotalMilliseconds;
+                    MediaPlayer.PlaybackSession.Position.TotalMilliseconds :
+                    MediaPlayer.PlaybackSession.NaturalDuration.TotalMilliseconds;
             }
             else if (sender == toggleLoop)
             {
-                mediaPlayer.MediaPlayer.IsLoopingEnabled = (bool)toggleLoop.IsChecked;
+                MediaPlayer.IsLoopingEnabled = (bool)toggleLoop.IsChecked;
             }
             else if (sender == toggleInvert)
             {
@@ -277,17 +239,12 @@ namespace Video_Player
         {
             if (sender == flipH)
             {
-                scale.ScaleX *= -1;
+                MediaPlayer.PlaybackSession.IsMirroring = !MediaPlayer.PlaybackSession.IsMirroring;
             }
-            else if (sender == rotateR)
+            else if (sender == rotateR || sender == rotateL)
             {
-                rotationValue = (rotationValue + 1) % 4;
-                mediaPlayer.MediaPlayer.PlaybackSession.PlaybackRotation = orientations[rotationValue];
-            }
-            else if (sender == rotateL)
-            {
-                rotationValue = (rotationValue + 3) % 4;
-                mediaPlayer.MediaPlayer.PlaybackSession.PlaybackRotation = orientations[rotationValue];
+                int rotationValue = ((int)MediaPlayer.PlaybackSession.PlaybackRotation + (sender == rotateR ? 1 : 3)) % 4;
+                MediaPlayer.PlaybackSession.PlaybackRotation = (MediaRotation)rotationValue;
             }
             else if (sender == take_snapshot)
             {
@@ -296,19 +253,20 @@ namespace Video_Player
         }
         public async void SavePicture()
         {
-            SoftwareBitmap softwareBitmapImg;
             CanvasDevice canvasDevice = CanvasDevice.GetSharedDevice();
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                SoftwareBitmap frameServerDest = new SoftwareBitmap(BitmapPixelFormat.Rgba8,
-                    (int)mediaPlayer.MediaPlayer.PlaybackSession.NaturalVideoWidth,
-                    (int)mediaPlayer.MediaPlayer.PlaybackSession.NaturalVideoHeight,
-                    BitmapAlphaMode.Premultiplied);
+                SoftwareBitmap frameServerDest = new SoftwareBitmap(
+                    BitmapPixelFormat.Rgba8,
+                    (int)MediaPlayer.PlaybackSession.NaturalVideoWidth,
+                    (int)MediaPlayer.PlaybackSession.NaturalVideoHeight,
+                    BitmapAlphaMode.Premultiplied
+                );
 
                 using CanvasBitmap canvasBitmap = CanvasBitmap.CreateFromSoftwareBitmap(canvasDevice, frameServerDest);
-                mediaPlayer.MediaPlayer.CopyFrameToVideoSurface(canvasBitmap);
+                MediaPlayer.CopyFrameToVideoSurface(canvasBitmap);
 
-                softwareBitmapImg = await SoftwareBitmap.CreateCopyFromSurfaceAsync(canvasBitmap);
+                SoftwareBitmap softwareBitmapImg = await SoftwareBitmap.CreateCopyFromSurfaceAsync(canvasBitmap);
                 FileSavePicker savePicker = new FileSavePicker
                 {
                     SuggestedStartLocation = PickerLocationId.Desktop,
@@ -331,13 +289,13 @@ namespace Video_Player
             if (start)
             {
                 var period = TimeSpan.FromMilliseconds(30);
-                PeriodicTimer = ThreadPoolTimer.CreatePeriodicTimer((source) =>
+                periodicTimer = ThreadPoolTimer.CreatePeriodicTimer((source) =>
                 {
                     _ = Dispatcher.RunAsync(CoreDispatcherPriority.High, () =>
                     {
-                        if (mediaPlayer.MediaPlayer.PlaybackSession.Position > TimeSpan.Zero)
+                        if (MediaPlayer.PlaybackSession.Position > TimeSpan.Zero)
                         {
-                            mediaPlayer.MediaPlayer.PlaybackSession.Position -= period;
+                            MediaPlayer.PlaybackSession.Position -= period;
                         }
                         else
                         {
@@ -350,14 +308,14 @@ namespace Video_Player
             }
             else
             {
-                PeriodicTimer?.Cancel();
+                periodicTimer?.Cancel();
                 reverseButton.IsChecked = false;
             }
         }
 
         private void ReverseButton_Checked(object sender, RoutedEventArgs e)
         {
-            if (mediaPlayer.MediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
+            if (MediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
             {
                 PlayPause();
             }
@@ -367,10 +325,8 @@ namespace Video_Player
         private void RangeSlider_ValueChanged(object sender, RangeChangedEventArgs e) => SetLoopMarkers();
         private void SetLoopMarkers()
         {
-            loopMarkerA =
-                TimeSpan.FromMilliseconds((bool)toggleInvert.IsChecked ? rangeSlider.RangeEnd : rangeSlider.RangeStart);
-            loopMarkerB =
-                TimeSpan.FromMilliseconds((bool)toggleInvert.IsChecked ? rangeSlider.RangeStart : rangeSlider.RangeEnd);
+            loopMarkerA = (bool)toggleInvert.IsChecked ? rangeSlider.RangeEnd : rangeSlider.RangeStart;
+            loopMarkerB = (bool)toggleInvert.IsChecked ? rangeSlider.RangeStart : rangeSlider.RangeEnd;
         }
 
         private void MediaPlayer_Tapped(object sender, TappedRoutedEventArgs e) => PlayPause();

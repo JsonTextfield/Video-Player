@@ -47,19 +47,19 @@ namespace Video_Player
         private void CoreWindow_CharacterReceived(CoreWindow sender, CharacterReceivedEventArgs args)
         {
             TabViewItem tab = (TabViewItem)Tabs.SelectedItem;
-            MyVideoControl videoControl = tab.Content as MyVideoControl;
+            VideoControl videoControl = tab.Content as VideoControl;
             switch (args.KeyCode)
             {
                 case ' ':
                     videoControl.PlayPause();
                     break;
                 case ']':
-                    videoControl.MediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate =
-                        Math.Min(1, videoControl.MediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate + 0.1);
+                    videoControl.MediaPlayer.PlaybackSession.PlaybackRate =
+                        Math.Min(1, videoControl.MediaPlayer.PlaybackSession.PlaybackRate + 0.1);
                     break;
                 case '[':
-                    videoControl.MediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate =
-                        Math.Max(0.1, videoControl.MediaPlayer.MediaPlayer.PlaybackSession.PlaybackRate - 0.1);
+                    videoControl.MediaPlayer.PlaybackSession.PlaybackRate =
+                        Math.Max(0.1, videoControl.MediaPlayer.PlaybackSession.PlaybackRate - 0.1);
                     break;
                 default:
                     System.Diagnostics.Debug.WriteLine(args.KeyCode);
@@ -87,13 +87,13 @@ namespace Video_Player
         {
             if (!fileTypes.Contains(file.FileType.ToLower())) return;
             textBlock.Visibility = Visibility.Collapsed;
-            MyVideoControl videoControl = new MyVideoControl(file);
+            VideoControl videoControl = new VideoControl(file);
             TabViewItem tab = new TabViewItem()
             {
                 MinWidth = 60,
-                Header = file.Name,
+                Header = new TabTitle(file.Name),
                 AllowDrop = true,
-                Content = videoControl
+                Content = videoControl,
             };
             videoControl.Tab = tab;
             Tabs.TabItems.Add(tab);
@@ -114,9 +114,9 @@ namespace Video_Player
 
         private void Tab_CloseRequested(TabView sender, TabViewTabCloseRequestedEventArgs args)
         {
-            MyVideoControl videoControl = args.Tab.Content as MyVideoControl;
-            videoControl.MediaPlayer.MediaPlayer.Pause();
-            videoControl.MediaPlayer.MediaPlayer.Dispose();
+            VideoControl videoControl = args.Tab.Content as VideoControl;
+            videoControl.MediaPlayer.Pause();
+            videoControl.MediaPlayer.Dispose();
             sender.IsAddTabButtonVisible = true;
             sender.TabItems.Remove(args.Tab);
             sender.IsAddTabButtonVisible = false;
@@ -156,7 +156,7 @@ namespace Video_Player
             var picker = new Windows.Storage.Pickers.FileOpenPicker
             {
                 ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail,
-                SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Desktop
+                SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.VideosLibrary,
             };
 
             fileTypes.ForEach(picker.FileTypeFilter.Add);

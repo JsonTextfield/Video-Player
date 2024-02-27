@@ -1,12 +1,10 @@
 ﻿<UserControl
-    x:Class="Video_Player.MyVideoControl"
+    x:Class="Video_Player.VideoControl"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:controls="using:Microsoft.Toolkit.Uwp.UI.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    d:DesignHeight="900"
-    d:DesignWidth="1600"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
     mc:Ignorable="d">
     <UserControl.ContextFlyout>
@@ -41,16 +39,12 @@
             RelativePanel.AlignLeftWithPanel="True"
             RelativePanel.AlignRightWithPanel="True"
             RelativePanel.AlignTopWithPanel="True" />
+
         <MediaPlayerElement
-            x:Name="mediaPlayer"
+            x:Name="mediaPlayerElement"
             DoubleTapped="MediaPlayer_DoubleTapped"
             RelativePanel.Above="loopPanel"
-            RenderTransformOrigin="0.5,0.5"
-            Tapped="MediaPlayer_Tapped">
-            <MediaPlayerElement.RenderTransform>
-                <ScaleTransform x:Name="scale" ScaleX="1" />
-            </MediaPlayerElement.RenderTransform>
-        </MediaPlayerElement>
+            Tapped="MediaPlayer_Tapped"/>
 
         <StackPanel
             x:Name="loopPanel"
@@ -92,6 +86,7 @@
             Margin="10,0,10,0"
             VerticalAlignment="Center"
             Minimum="0"
+            RangeStart="0"
             RelativePanel.AlignBottomWith="loopPanel"
             RelativePanel.AlignTopWith="loopPanel"
             RelativePanel.RightOf="loopPanel"
@@ -126,7 +121,7 @@
             <ToggleButton
                 x:Name="reverseButton"
                 Padding="10"
-                Click="ReverseButton_Checked"
+                Tapped="ReverseButton_Checked"
                 RenderTransformOrigin="0.5,0.5">
                 <ToggleButton.RenderTransform>
                     <ScaleTransform ScaleX="-1" />
