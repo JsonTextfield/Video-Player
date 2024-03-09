@@ -40,9 +40,9 @@ namespace Video_Player
 
             mediaPlayerElement.Source = MediaSource.CreateFromStorageFile(file);
 
+            MediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
             MediaPlayer.PlaybackSession.PositionChanged += PlaybackSession_PositionChanged;
             MediaPlayer.PlaybackSession.PlaybackStateChanged += PlaybackSession_PlaybackStateChanged;
-            MediaPlayer.MediaOpened += MediaPlayer_MediaOpened;
             MediaPlayer.PlaybackSession.PlaybackRateChanged += PlaybackSession_PlaybackRateChanged;
         }
 
@@ -50,14 +50,13 @@ namespace Video_Player
         {
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, UpdatePlaybackSpeed);
         }
-
         private async void MediaPlayer_MediaOpened(MediaPlayer sender, object args)
         {
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 UpdateTimestamp();
                 UpdatePlaybackSpeed();
-                rangeSlider.RangeEnd = rangeSlider.Maximum = loopMarkerB = sender.PlaybackSession.NaturalDuration.TotalMilliseconds;
+                rangeSlider.RangeEnd = rangeSlider.Maximum = slider.Maximum = loopMarkerB = sender.PlaybackSession.NaturalDuration.TotalMilliseconds;
             });
         }
 
@@ -81,10 +80,7 @@ namespace Video_Player
         private void UpdateFromPlayer()
         {
             slider.ValueChanged -= Slider_ValueChanged;
-            slider.Value =
-                MediaPlayer.PlaybackSession.Position.TotalSeconds
-                / MediaPlayer.PlaybackSession.NaturalDuration.TotalSeconds
-                * 100;
+            slider.Value = MediaPlayer.PlaybackSession.Position.TotalMilliseconds;
             UpdateTimestamp();
             slider.ValueChanged += Slider_ValueChanged;
         }
@@ -94,9 +90,7 @@ namespace Video_Player
          */
         private void UpdateFromSlider()
         {
-            MediaPlayer.PlaybackSession.Position = TimeSpan.FromMilliseconds(
-                slider.Value / 100 * MediaPlayer.PlaybackSession.NaturalDuration.TotalMilliseconds
-            );
+            MediaPlayer.PlaybackSession.Position = TimeSpan.FromMilliseconds(slider.Value);
             UpdateTimestamp();
         }
 
@@ -119,38 +113,40 @@ namespace Video_Player
             videoSpeedLabel.Text = string.Format("{0:F2}", MediaPlayer.PlaybackSession.PlaybackRate);
         }
 
-        private bool IsPositionBetweenAandB(double position, double fullVideoLength)
+        private bool IsPositionBetweenAandB()
         {
+            double fullVideoLength = MediaPlayer.PlaybackSession.NaturalDuration.TotalMilliseconds;
+            double position = MediaPlayer.PlaybackSession.Position.TotalMilliseconds;
             double stop = loopMarkerB;
-            double pos = position;
-            if (loopMarkerA > loopMarkerB)
+            if (loopMarkerB < loopMarkerA)
             {
                 stop += fullVideoLength;
-                if (pos < loopMarkerB)
+                if (position < loopMarkerB)
                 {
-                    pos += fullVideoLength;
+                    position += fullVideoLength;
                 }
             }
-            return loopMarkerA <= pos && pos < stop;
+            return loopMarkerA <= position && position < stop;
         }
 
         private async void PlaybackSession_PositionChanged(MediaPlaybackSession sender, object args)
         {
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-                 {
-                     UpdateFromPlayer();
-                     if (!IsPositionBetweenAandB(sender.Position.TotalMilliseconds, sender.NaturalDuration.TotalMilliseconds))
-                     {
-                         sender.Position = TimeSpan.FromMilliseconds(loopMarkerA);
-                     }
-                 }
-            );
+            {
+
+                UpdateFromPlayer();
+                if (!IsPositionBetweenAandB())
+                {
+                    sender.Position = TimeSpan.FromMilliseconds(loopMarkerA);
+                }
+
+            });
         }
 
         public void MuteUnmute()
         {
             MediaPlayer.IsMuted = !MediaPlayer.IsMuted;
-            muteToggle.Content = new SymbolIcon(MediaPlayer.IsMuted ? Symbol.Mute : Symbol.Volume);
+            muteButton.Content = new SymbolIcon(MediaPlayer.IsMuted ? Symbol.Mute : Symbol.Volume);
         }
 
         public void PlayPause(object sender = null, RoutedEventArgs e = null)
@@ -187,7 +183,6 @@ namespace Video_Player
             playbackState = MediaPlayer.PlaybackSession.PlaybackState;
             MediaPlayer.Pause();
             MediaPlayer.PlaybackSession.PositionChanged -= PlaybackSession_PositionChanged;
-            Debug.WriteLine(MediaPlayer.PlaybackSession.PlaybackState);
         }
 
         /**
@@ -209,16 +204,12 @@ namespace Video_Player
             if (sender == toggleA)
             {
                 rangeSlider.RangeStart = loopMarkerA =
-                    (bool)toggleA.IsChecked ?
-                    MediaPlayer.PlaybackSession.Position.TotalMilliseconds :
-                    0;
+                    (bool)toggleA.IsChecked ? MediaPlayer.PlaybackSession.Position.TotalMilliseconds : 0;
             }
             else if (sender == toggleB)
             {
                 rangeSlider.RangeEnd = loopMarkerB =
-                    (bool)toggleB.IsChecked ?
-                    MediaPlayer.PlaybackSession.Position.TotalMilliseconds :
-                    MediaPlayer.PlaybackSession.NaturalDuration.TotalMilliseconds;
+                    (bool)toggleB.IsChecked ? MediaPlayer.PlaybackSession.Position.TotalMilliseconds : rangeSlider.Maximum;
             }
             else if (sender == toggleLoop)
             {
@@ -229,7 +220,7 @@ namespace Video_Player
                 (rangeSlider.Foreground, rangeSlider.Background) = (rangeSlider.Background, rangeSlider.Foreground);
                 SetLoopMarkers();
             }
-            else if (sender == muteToggle)
+            else if (sender == muteButton)
             {
                 MuteUnmute();
             }
@@ -253,9 +244,9 @@ namespace Video_Player
         }
         public async void SavePicture()
         {
-            CanvasDevice canvasDevice = CanvasDevice.GetSharedDevice();
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
+                CanvasDevice canvasDevice = CanvasDevice.GetSharedDevice();
                 SoftwareBitmap frameServerDest = new SoftwareBitmap(
                     BitmapPixelFormat.Rgba8,
                     (int)MediaPlayer.PlaybackSession.NaturalVideoWidth,
@@ -267,7 +258,7 @@ namespace Video_Player
                 MediaPlayer.CopyFrameToVideoSurface(canvasBitmap);
 
                 SoftwareBitmap softwareBitmapImg = await SoftwareBitmap.CreateCopyFromSurfaceAsync(canvasBitmap);
-                FileSavePicker savePicker = new FileSavePicker
+                FileSavePicker savePicker = new FileSavePicker()
                 {
                     SuggestedStartLocation = PickerLocationId.Desktop,
                     SuggestedFileName = "Snapshot" + DateTime.Now.ToString("yyyyMMddhhmmss"),
@@ -275,7 +266,6 @@ namespace Video_Player
                 savePicker.FileTypeChoices.Add("Image", new List<string>() { ".jpg" });
                 StorageFile savefile = await savePicker.PickSaveFileAsync();
                 if (savefile == null) return;
-
 
                 using var stream = await savefile.OpenAsync(FileAccessMode.ReadWrite);
                 var encoder = await BitmapEncoder.CreateAsync(BitmapEncoder.JpegEncoderId, stream);
@@ -317,7 +307,7 @@ namespace Video_Player
         {
             if (MediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
             {
-                PlayPause();
+                MediaPlayer.Pause();
             }
             ReverseVideo((bool)reverseButton.IsChecked);
         }
