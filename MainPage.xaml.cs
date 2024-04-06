@@ -25,7 +25,7 @@ namespace Video_Player
         private readonly List<string> fileTypes = new List<string>() { ".mp4", ".mov", ".flv", ".wmv", ".mkv" };
         public MainPage()
         {
-            this.InitializeComponent();
+            InitializeComponent();
 
             var coreTitleBar = CoreApplication.GetCurrentView().TitleBar;
             coreTitleBar.ExtendViewIntoTitleBar = true;
@@ -116,10 +116,12 @@ namespace Video_Player
         {
             VideoControl videoControl = args.Tab.Content as VideoControl;
             videoControl.MediaPlayer.Pause();
-            videoControl.MediaPlayer.Dispose();
+            //videoControl.MediaPlayer.Dispose();
+
             sender.IsAddTabButtonVisible = true;
             sender.TabItems.Remove(args.Tab);
             sender.IsAddTabButtonVisible = false;
+
             ResizeTabs();
             if (Tabs.TabItems.Count == 0)
             {
